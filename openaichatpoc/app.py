@@ -55,8 +55,12 @@ def create_response(client: OpenAI, user_input: str) -> Dict[str, Any]:
         formatted_input = [
             {
                 "role": "user",
-                "type": "input_text",
-                "text": user_input
+                "content": [
+                    {
+                        "type": "message",
+                        "text": user_input
+                    }
+                ]
             }
         ]
         
