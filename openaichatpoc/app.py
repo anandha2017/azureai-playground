@@ -57,7 +57,7 @@ def create_response(client: OpenAI, user_input: str) -> Dict[str, Any]:
                 "role": "user",
                 "content": [
                     {
-                        "type": "message",
+                        "type": "input_text",
                         "text": user_input
                     }
                 ]
@@ -99,16 +99,43 @@ def display_response(response: Dict[str, Any]) -> None:
     Args:
         response: The API response from OpenAI
     """
-    # Extract the output text from the response
-    output_text = response.output.text
-    
-    # Display the response in a panel with markdown formatting
-    console.print(
-        Panel(
-            Markdown(output_text),
-            title="[bold green]Assistant Response[/bold green]"
+    try:
+        # Debug the response structure
+        console.print(f"Response type: {type(response)}")
+        console.print(f"Response structure: {response}")
+        
+        # Extract the output text from the response
+        # The structure might be different than expected, so let's handle it properly
+        if hasattr(response, 'output') and hasattr(response.output, 'text'):
+            # Original expected structure
+            output_text = response.output.text
+        elif hasattr(response, 'content') and isinstance(response.content, list):
+            # Try to find text content in the response
+            for item in response.content:
+                if isinstance(item, dict) and item.get('type') == 'output_text':
+                    output_text = item.get('text', 'No text found in response')
+                    break
+            else:
+                output_text = "Could not find text content in response"
+        else:
+            # Fallback: convert the entire response to a string
+            output_text = f"Response format changed. Raw response: {str(response)}"
+        
+        # Display the response in a panel with markdown formatting
+        console.print(
+            Panel(
+                Markdown(output_text),
+                title="[bold green]Assistant Response[/bold green]"
+            )
         )
-    )
+    except Exception as e:
+        console.print(
+            Panel(
+                f"[bold red]Error displaying response:[/bold red] {str(e)}\n\n"
+                f"Raw response: {str(response)}",
+                title="Display Error"
+            )
+        )
 
 def main() -> None:
     """Main entry point for the application."""
